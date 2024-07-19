@@ -15,7 +15,7 @@ class Reasoning_Program_Generator:
         self.save_path = args.save_path
         self.num_programs_per_example = args.num_programs_per_example
 
-        self.openai_api = OpenAIModel(args.api_key, args.model_name, args.stop_words, args.max_new_tokens)
+        self.openai_api = OpenAIModel(args.api_key, args.api_base, args.model_name, args.stop_words, args.max_new_tokens)
         self.prompt_loader = Prompt_Loader()
 
     def update_results(self, sample, generated_text):
@@ -66,12 +66,17 @@ class Reasoning_Program_Generator:
                     for sample, output in zip(chunk, batch_outputs):
                         self.update_results(sample, output)
                 except:
+                    import traceback
+                    #print(f"Batch generation failed: {e}")
+                    #print(traceback.format_exc())  # 打印详细的异常堆栈信息
                     # generate one by one if batch generation fails
                     for sample, full_prompt in zip(chunk, full_prompts):
                         try:
                             output = self.openai_api.generate(full_prompt, temperature)
                             self.update_results(sample, output)
-                        except:
+                        except Exception as e:
+                            print(f"single generation failed: {e}")
+                            print(traceback.format_exc())  # 打印详细的异常堆栈信息
                             print('Error in generating reasoning programs for example: ', sample['id'])
 
         print(f"Generated {len(result_dict)} examples.")
@@ -96,8 +101,24 @@ def parse_args():
     parser.add_argument('--model_name', type=str, default='text-davinci-003')
     parser.add_argument('--stop_words', type=str, default='# The claim is')
     parser.add_argument('--max_new_tokens', type=int, default=1024)
+    parser.add_argument('--api_base', type=str, default="")
     args = parser.parse_args()
     return args
+
+'''def parse_args():
+    parser = argparse.ArgumentParser()
+    # dataset args
+    parser.add_argument('HOVER', default='HOVER', type=str)
+    parser.add_argument('/datasets', type=str)
+    parser.add_argument('1', default=-1, type=int)
+    parser.add_argument('1', default=1, type=int)
+    parser.add_argument('./results/programs', default = './results/programs', type=str)
+    parser.add_argument('sk-wopjnoylhrakfmskojknzwujsjtqujktugndddvpeixbipci', type=str)
+    parser.add_argument('bge-large-en-v1.5', type=str, default='text-davinci-003')
+    parser.add_argument('--stop_words', type=str, default='# The claim is')
+    parser.add_argument('--max_new_tokens', type=int, default=1024)
+    args = parser.parse_args()
+    return args'''
 
 if __name__ == "__main__":
     args = parse_args()

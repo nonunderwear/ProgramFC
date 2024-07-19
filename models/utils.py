@@ -69,8 +69,9 @@ async def dispatch_openai_prompt_requests(
     return await asyncio.gather(*async_responses)
 
 class OpenAIModel:
-    def __init__(self, API_KEY, model_name, stop_words, max_new_tokens) -> None:
+    def __init__(self, API_KEY, API_BASE, model_name, stop_words, max_new_tokens) -> None:
         openai.api_key = API_KEY
+        openai.api_base = API_BASE
         self.model_name = model_name
         self.max_new_tokens = max_new_tokens
         self.stop_words = stop_words
@@ -89,7 +90,7 @@ class OpenAIModel:
         )
         generated_text = response['choices'][0]['message']['content'].strip()
         return generated_text
-    
+
     # used for text/code-davinci
     def prompt_generate(self, input_string, temperature = 0.0):
         response = completions_with_backoff(
@@ -106,7 +107,7 @@ class OpenAIModel:
         return generated_text
 
     def generate(self, input_string, temperature = 0.0):
-        if self.model_name in ['text-davinci-002', 'code-davinci-002', 'text-davinci-003']:
+        if self.model_name in ['text-davinci-002', 'code-davinci-002', 'text-davinci-003', 'text-embedding-3-small', 'bge-large-en-v1.5', 'text-embedding-ada-002']:
             return self.prompt_generate(input_string, temperature)
         elif self.model_name in ['gpt-4', 'gpt-3.5-turbo']:
             return self.chat_generate(input_string, temperature)
